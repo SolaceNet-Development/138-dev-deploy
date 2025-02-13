@@ -123,15 +123,6 @@ contract Bridge is IBridge, AccessControl {
         emit Transfer(from, to, amount);
     }
 
-    function validateTransfer(
-        bytes32 from,
-        bytes32 to,
-        uint256 amount,
-        bytes[] calldata signatures
-    ) external override whenNotPaused {
-        _validateTransfer(from, to, amount, signatures);
-    }
-
     function recoverSigner(bytes32 message, bytes memory signature) internal pure returns (address) {
         bytes32 r;
         bytes32 s;
@@ -249,6 +240,15 @@ contract Bridge is IBridge, AccessControl {
         } else {
             IERC20(token).transfer(recipient, amount);
         }
+    }
+
+    function validateTransfer(
+        bytes32 from,
+        bytes32 to,
+        uint256 amount,
+        bytes[] calldata signatures
+    ) external override whenNotPaused {
+        _validateTransfer(from, to, amount, signatures);
     }
 
     function batchValidateTransfers(
