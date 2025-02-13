@@ -217,24 +217,6 @@ contract Bridge is IBridge, AccessControl {
         return validationCache[messageHash][validator];
     }
 
-    function batchValidateTransfers(
-        bytes32[] calldata froms,
-        bytes32[] calldata tos,
-        uint256[] calldata amounts,
-        bytes[][] calldata signatures
-    ) external whenNotPaused {
-        uint256 length = froms.length;
-        if (length > 20) revert BatchLimitExceeded();
-        if (length != tos.length || length != amounts.length || length != signatures.length) 
-            revert ArrayLengthMismatch();
-
-        unchecked {
-            for(uint256 i = 0; i < length; i++) {
-                validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
-            }
-        }
-    }
-
     function enableEmergencyMode() external onlyRole(DEFAULT_ADMIN_ROLE) {
         emergencyMode = true;
         emergencyTimelock = block.timestamp + 24 hours;
@@ -259,6 +241,24 @@ contract Bridge is IBridge, AccessControl {
             payable(recipient).transfer(amount);
         } else {
             IERC20(token).transfer(recipient, amount);
+        }
+    }
+
+    function batchValidateTransfers(
+        bytes32[] calldata froms,
+        bytes32[] calldata tos,
+        uint256[] calldata amounts,
+        bytes[][] calldata signatures
+    ) external whenNotPaused {
+        uint256 length = froms.length;
+        if (length > 20) revert BatchLimitExceeded();
+        if (length != tos.length || length != amounts.length || length != signatures.length) 
+            revert ArrayLengthMismatch();
+
+        unchecked {
+            for(uint256 i = 0; i < length; i++) {
+                validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
+            }
         }
     }
 }
