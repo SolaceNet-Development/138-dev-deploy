@@ -251,15 +251,6 @@ contract Bridge is IBridge, AccessControl {
         }
     }
 
-    function validateTransfer(
-        bytes32 from,
-        bytes32 to,
-        uint256 amount,
-        bytes[] calldata signatures
-    ) external override whenNotPaused {
-        _validateTransfer(from, to, amount, signatures);
-    }
-
     function batchValidateTransfers(
         bytes32[] calldata froms,
         bytes32[] calldata tos,
