@@ -7,8 +7,6 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract Bridge is IBridge, AccessControl {
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    
     IOracle public oracle;
     mapping(address => bool) public validators;
     uint256 public required;
@@ -136,9 +134,10 @@ contract Bridge is IBridge, AccessControl {
         
         // Update nonce and mark transfer as processed atomically
         uint256 expectedNonce = nonces[address(uint160(uint256(from)))] + 1;
-        if (expectedNonce != nonce) revert InvalidNonce();
+        uint256 currentNonce = nonces[address(uint160(uint256(from)))];
+        if (expectedNonce != currentNonce + 1) revert InvalidNonce();
         
-        nonces[address(uint160(uint256(from)))] = nonce;
+        nonces[address(uint160(uint256(from)))] = currentNonce + 1;
         processedTransfers[messageHash] = true;
         
         emit Transfer(from, to, amount);
@@ -242,6 +241,52 @@ contract Bridge is IBridge, AccessControl {
     }
 
     // Add batch operation gas optimization
+    error ArrayLengthMismatch();
+
+    function validateTransfer(
+        bytes32 from,
+        bytes32 to,
+        uint256 amount,
+        bytes[] calldata signatures
+    ) public whenNotPaused {
+        bytes32 messageHash = keccak256(abi.encodePacked(from, to, amount));
+        
+        if (processedTransfers[messageHash]) revert TransferAlreadyProcessed();
+        if (amount > transferLimit) revert TransferLimitExceeded();
+
+        uint256 validCount;
+        address[] memory uniqueSigners = new address[](signatures.length);
+
+        unchecked {
+            for (uint256 i = 0; i < signatures.length; i++) {
+                address signer = recoverSigner(messageHash, signatures[i]);
+                
+                if (!hasRole(VALIDATOR_ROLE, signer)) revert InvalidSignature();
+                if (isValidationCached(messageHash, signer)) continue;
+                
+                for (uint256 j = 0; j < validCount; j++) {
+                    if (uniqueSigners[j] == signer) revert DuplicateValidator();
+                }
+                
+                uniqueSigners[validCount] = signer;
+                cacheValidation(messageHash, signer);
+                validCount++;
+            }
+        }
+
+        if (validCount < required) revert ValidationFailed();
+        
+        // Update nonce and mark transfer as processed atomically
+        uint256 expectedNonce = nonces[address(uint160(uint256(from)))] + 1;
+        uint256 currentNonce = nonces[address(uint160(uint256(from)))];
+        if (expectedNonce != currentNonce + 1) revert InvalidNonce();
+        
+        nonces[address(uint160(uint256(from)))] = currentNonce + 1;
+        processedTransfers[messageHash] = true;
+        
+        emit Transfer(from, to, amount);
+    }
+
     function batchValidateTransfers(
         bytes32[] calldata froms,
         bytes32[] calldata tos,
@@ -251,7 +296,7 @@ contract Bridge is IBridge, AccessControl {
         uint256 length = froms.length;
         if (length > 20) revert BatchLimitExceeded();
         if (length != tos.length || length != amounts.length || length != signatures.length) 
-            revert("Array length mismatch");
+            revert ArrayLengthMismatch();
 
         unchecked {
             for(uint256 i = 0; i < length; i++) {
