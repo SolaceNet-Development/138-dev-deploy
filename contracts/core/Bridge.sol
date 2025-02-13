@@ -6,6 +6,8 @@ import { IOracle } from "../interfaces/IOracle.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Bridge is IBridge {
+    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+    
     IOracle public oracle;
     mapping(address => bool) public validators;
     uint256 public required;
@@ -141,12 +143,15 @@ contract Bridge is IBridge {
         emit Transfer(from, to, amount);
     }
 
+    error InvalidSignatureLength(uint256 length);
+    error InvalidSignatureV(uint8 v);
+
     function recoverSigner(bytes32 message, bytes memory signature) internal pure returns (address) {
         bytes32 r;
         bytes32 s;
         uint8 v;
 
-        require(signature.length == 65, "Invalid signature length");
+        if (signature.length != 65) revert InvalidSignatureLength(signature.length);
 
         assembly {
             r := mload(add(signature, 32))
@@ -155,7 +160,7 @@ contract Bridge is IBridge {
         }
 
         if (v < 27) v += 27;
-        require(v == 27 || v == 28, "Invalid signature v value");
+        if (v != 27 && v != 28) revert InvalidSignatureV(v);
 
         return ecrecover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", message)),
