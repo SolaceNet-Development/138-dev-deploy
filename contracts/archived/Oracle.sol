@@ -1,46 +1,50 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { IOracle } from "../interfaces/IOracle.sol";
 
-contract Oracle is IOracle, AccessControl {
-    bytes32 public constant AUTHORITY_ROLE = keccak256("AUTHORITY_ROLE");
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+contract Oracle is IOracle {
+    error PriceNotAvailable(bytes32 asset);
+    error NotAdmin();
+    error NotAuthority();
+    
     mapping(bytes32 => uint256) private prices;
-    
+    mapping(address => bool) public authorities;
+    address public admin;
+
     constructor() {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(AUTHORITY_ROLE, msg.sender);
+        admin = msg.sender;
+        authorities[msg.sender] = true;
     }
-    
-    function updatePrice(bytes32 asset, uint256 price) external override onlyRole(AUTHORITY_ROLE) {
+
+    modifier onlyAdmin() {
+        if (msg.sender != admin) revert NotAdmin();
+        _;
+    }
+
+    modifier onlyAuthority() {
+        if (!authorities[msg.sender]) revert NotAuthority();
+        _;
+    }
+
+    function updatePrice(bytes32 asset, uint256 price) external override onlyAuthority {
         prices[asset] = price;
         emit PriceUpdated(asset, price);
     }
-    
-    error PriceNotAvailable(bytes32 asset);
 
     function getPrice(bytes32 asset) external view override returns (uint256) {
         if (prices[asset] == 0) revert PriceNotAvailable(asset);
         return prices[asset];
     }
-    
-    function addAuthority(address authority) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        grantRole(AUTHORITY_ROLE, authority);
+
+    function addAuthority(address authority) external override onlyAdmin {
+        authorities[authority] = true;
         emit AuthorityAdded(authority);
     }
-    
-    function removeAuthority(address authority) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        revokeRole(AUTHORITY_ROLE, authority);
+
+    function removeAuthority(address authority) external override onlyAdmin {
+        authorities[authority] = false;
         emit AuthorityRemoved(authority);
     }
-    
-    function authorities(address authority) external view override returns (bool) {
-        return hasRole(AUTHORITY_ROLE, authority);
-    }
-    
-    function admin() external view override returns (address) {
-        return getRoleMember(DEFAULT_ADMIN_ROLE, 0);
-    }
+}
 }
