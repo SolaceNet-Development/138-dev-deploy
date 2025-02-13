@@ -17,16 +17,22 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      forking: process.env.MAINNET_RPC_URL ? {
-        url: process.env.MAINNET_RPC_URL,
-        blockNumber: 13000000
-      } : undefined,
       chainId: 1337
     },
-    polygon: process.env.POLYGON_RPC_URL ? {
-      url: process.env.POLYGON_RPC_URL,
-      accounts: [process.env.PRIVATE_KEY].filter(Boolean)
-    } : undefined
+    ...(process.env.MAINNET_RPC_URL ? {
+      hardhat: {
+        forking: {
+          url: process.env.MAINNET_RPC_URL,
+          blockNumber: 13000000
+        }
+      }
+    } : {}),
+    ...(process.env.POLYGON_RPC_URL ? {
+      polygon: {
+        url: process.env.POLYGON_RPC_URL,
+        accounts: [process.env.PRIVATE_KEY].filter(Boolean)
+      }
+    } : {})
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
