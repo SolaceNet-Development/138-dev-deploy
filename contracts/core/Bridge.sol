@@ -70,7 +70,7 @@ contract Bridge is IBridge, AccessControl {
         _;
     }
 
-    function transfer(bytes32 to, uint256 amount) external override whenNotPaused {
+    function transfer(bytes32 to, uint256 amount) external payable override whenNotPaused {
         if (amount == 0) revert InvalidAmount();
         if (amount > transferLimit) revert TransferLimitExceeded();
         if (msg.value < fee) revert InsufficientFee();
@@ -117,9 +117,9 @@ contract Bridge is IBridge, AccessControl {
         if (validCount < required) revert ValidationFailed();
         
         // Update nonce and mark transfer as processed atomically
-        uint256 currentNonce = nonces[address(uint160(uint256(from)))];
+        uint256 currentNonce = nonces[from];
         uint256 expectedNonce = currentNonce + 1;
-        nonces[address(uint160(uint256(from)))] = expectedNonce;
+        nonces[from] = expectedNonce;
         processedTransfers[messageHash] = true;
         
         emit Transfer(from, to, amount);
