@@ -47,4 +47,3 @@ contract Oracle is IOracle {
         emit AuthorityRemoved(authority);
     }
 }
-}
