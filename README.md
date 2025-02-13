@@ -2,6 +2,8 @@
 
 This project sets up a development environment for deploying a 138-chain ecosystem. The deployment includes forking the Ethereum Mainnet, integrating two-way Tether contracts, mirroring transactions to Polygon PoS, and bootstrapping a full suite of on-chain contracts.
 
+Note: This is a development environment setup - not intended for production use.
+
 ## Prerequisites
 
 - Linux (x86_64), macOS (Intel processor), or Windows (64-bit with WSL2)
