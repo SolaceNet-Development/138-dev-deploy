@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "./interfaces/IOracle.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { IOracle } from "../interfaces/IOracle.sol";
 
 contract Oracle is IOracle, AccessControl {
     bytes32 public constant AUTHORITY_ROLE = keccak256("AUTHORITY_ROLE");
@@ -17,8 +17,10 @@ contract Oracle is IOracle, AccessControl {
         emit PriceUpdated(asset, price);
     }
     
+    error PriceNotAvailable(bytes32 asset);
+
     function getPrice(bytes32 asset) external view override returns (uint256) {
-        require(prices[asset] > 0, "Oracle: Price not available");
+        if (prices[asset] == 0) revert PriceNotAvailable(asset);
         return prices[asset];
     }
     
