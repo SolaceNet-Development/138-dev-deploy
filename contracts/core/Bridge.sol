@@ -70,7 +70,9 @@ contract Bridge is IBridge, AccessControl {
         _;
     }
 
-    function transfer(bytes32 to, uint256 amount) external payable override whenNotPaused {
+    function transfer(bytes32 to, uint256 amount) external override whenNotPaused {
+        require(msg.value >= fee, "Insufficient fee");
+
         if (amount == 0) revert InvalidAmount();
         if (amount > transferLimit) revert TransferLimitExceeded();
         if (msg.value < fee) revert InsufficientFee();
@@ -88,7 +90,7 @@ contract Bridge is IBridge, AccessControl {
         bytes32 to,
         uint256 amount,
         bytes[] calldata signatures
-    ) internal whenNotPaused {
+    ) external override whenNotPaused {
         bytes32 messageHash = keccak256(abi.encodePacked(from, to, amount));
         
         if (processedTransfers[messageHash]) revert TransferAlreadyProcessed();
