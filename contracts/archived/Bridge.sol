@@ -7,13 +7,23 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { IBridge } from "../interfaces/IBridge.sol";
 import { IOracle } from "../interfaces/IOracle.sol";
 
-contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
+abstract contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
 
     error InsufficientSignatures(uint256 provided, uint256 required);
     error InvalidValidator(address validator);
     error DuplicateValidator(address validator);
+
+    function addValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(VALIDATOR_ROLE, validator);
+        emit ValidatorAdded(validator);
+    }
+
+    function removeValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(VALIDATOR_ROLE, validator);
+        emit ValidatorRemoved(validator);
+    }
     
     IOracle public immutable ORACLE;
     uint256 public required;
