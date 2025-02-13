@@ -81,12 +81,12 @@ contract Bridge is IBridge, AccessControl {
         emit Transfer(sender, to, amount);
     }
 
-    function validateTransfer(
+    function _validateTransfer(
         bytes32 from,
         bytes32 to,
         uint256 amount,
         bytes[] calldata signatures
-    ) external override whenNotPaused {
+    ) internal whenNotPaused {
         bytes32 messageHash = keccak256(abi.encodePacked(from, to, amount));
         
         if (processedTransfers[messageHash]) revert TransferAlreadyProcessed();
@@ -121,6 +121,15 @@ contract Bridge is IBridge, AccessControl {
         processedTransfers[messageHash] = true;
         
         emit Transfer(from, to, amount);
+    }
+
+    function validateTransfer(
+        bytes32 from,
+        bytes32 to,
+        uint256 amount,
+        bytes[] calldata signatures
+    ) external override whenNotPaused {
+        _validateTransfer(from, to, amount, signatures);
     }
 
     function recoverSigner(bytes32 message, bytes memory signature) internal pure returns (address) {
@@ -264,7 +273,7 @@ contract Bridge is IBridge, AccessControl {
 
         unchecked {
             for(uint256 i = 0; i < length; i++) {
-                validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
+                _validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
             }
         }
     }
