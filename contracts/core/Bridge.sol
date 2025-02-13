@@ -7,10 +7,10 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract Bridge is IBridge, AccessControl {
+    bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
+    
     IOracle public oracle;
-    mapping(address => bool) public validators;
     uint256 public required;
-    address public admin;
     bool public paused;
     uint256 public transferLimit;
     mapping(bytes32 => bool) public processedTransfers;
@@ -46,14 +46,12 @@ contract Bridge is IBridge, AccessControl {
     error InvalidSignature();
     error DuplicateValidator();
     error ValidationFailed();
-    error RoleRequired(bytes32 role);
     error ValidationExpired();
     error CacheNotFound();
+    error InvalidSignatureLength(uint256 length);
+    error InvalidSignatureV(uint8 v);
+    error ArrayLengthMismatch();
 
-    // Add role constants
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-    bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
-    
     // Add validation cache
     mapping(bytes32 => mapping(address => bool)) private validationCache;
     uint256 private constant MAX_CACHE_AGE = 1 hours;
@@ -62,25 +60,9 @@ contract Bridge is IBridge, AccessControl {
     constructor(address _oracle, uint256 _required) {
         oracle = IOracle(_oracle);
         required = _required;
-        admin = msg.sender;
-        validators[msg.sender] = true;
         transferLimit = 1000 ether; // Default limit
         fee = 0.001 ether; // Default fee of 0.001 ETH
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(OPERATOR_ROLE, msg.sender);
-    }
-
-    error NotAdmin();
-    error NotValidator();
-
-    modifier onlyAdmin() {
-        if (msg.sender != admin) revert NotAdmin();
-        _;
-    }
-
-    modifier onlyValidator() {
-        if (!validators[msg.sender]) revert NotValidator();
-        _;
     }
 
     modifier whenNotPaused() {
@@ -95,7 +77,6 @@ contract Bridge is IBridge, AccessControl {
         uint256 nonce = nonces[msg.sender] + 1;
         nonces[msg.sender] = nonce;
         collectedFees[address(0)] += msg.value;
-        // Implementation details
         emit Transfer(bytes32(uint256(uint160(msg.sender))), to, amount);
     }
 
@@ -133,18 +114,13 @@ contract Bridge is IBridge, AccessControl {
         if (validCount < required) revert ValidationFailed();
         
         // Update nonce and mark transfer as processed atomically
-        uint256 expectedNonce = nonces[address(uint160(uint256(from)))] + 1;
         uint256 currentNonce = nonces[address(uint160(uint256(from)))];
-        if (expectedNonce != currentNonce + 1) revert InvalidNonce();
-        
-        nonces[address(uint160(uint256(from)))] = currentNonce + 1;
+        uint256 expectedNonce = currentNonce + 1;
+        nonces[address(uint160(uint256(from)))] = expectedNonce;
         processedTransfers[messageHash] = true;
         
         emit Transfer(from, to, amount);
     }
-
-    error InvalidSignatureLength(uint256 length);
-    error InvalidSignatureV(uint8 v);
 
     function recoverSigner(bytes32 message, bytes memory signature) internal pure returns (address) {
         bytes32 r;
@@ -170,28 +146,27 @@ contract Bridge is IBridge, AccessControl {
         );
     }
 
-    // Replace validator mapping with roles
-    function addValidator(address validator) external override onlyAdmin {
-        validators[validator] = true;
+    function addValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        _grantRole(VALIDATOR_ROLE, validator);
         emit ValidatorAdded(validator);
     }
 
-    function removeValidator(address validator) external override onlyAdmin {
-        validators[validator] = false;
+    function removeValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        _revokeRole(VALIDATOR_ROLE, validator);
         emit ValidatorRemoved(validator);
     }
 
-    function setTransferLimit(uint256 _limit) external onlyAdmin {
+    function setTransferLimit(uint256 _limit) external onlyRole(DEFAULT_ADMIN_ROLE) {
         transferLimit = _limit;
         emit TransferLimitUpdated(_limit);
     }
 
-    function setFee(uint256 _fee) external onlyAdmin {
+    function setFee(uint256 _fee) external onlyRole(DEFAULT_ADMIN_ROLE) {
         fee = _fee;
         emit FeeUpdated(_fee);
     }
 
-    function withdrawFees(address token, address recipient) external onlyAdmin {
+    function withdrawFees(address token, address recipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 amount = collectedFees[token];
         if (amount == 0) revert FeeWithdrawalFailed();
         
@@ -207,27 +182,26 @@ contract Bridge is IBridge, AccessControl {
         emit FeesWithdrawn(token, recipient, amount);
     }
 
-    function pause() external onlyAdmin {
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         paused = true;
         emit BridgePaused(msg.sender);
     }
 
-    function unpause() external onlyAdmin {
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         paused = false;
         emit BridgeUnpaused(msg.sender);
     }
 
-    function addSupportedToken(address token) external onlyAdmin {
+    function addSupportedToken(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
         supportedTokens[token] = true;
         emit TokenAdded(token);
     }
 
-    function removeSupportedToken(address token) external onlyAdmin {
+    function removeSupportedToken(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
         supportedTokens[token] = false;
         emit TokenRemoved(token);
     }
 
-    // Add validation caching
     function cacheValidation(bytes32 messageHash, address validator) internal {
         validationCache[messageHash][validator] = true;
         validationTimestamps[messageHash] = block.timestamp;
@@ -238,53 +212,6 @@ contract Bridge is IBridge, AccessControl {
             return false;
         }
         return validationCache[messageHash][validator];
-    }
-
-    // Add batch operation gas optimization
-    error ArrayLengthMismatch();
-
-    function validateTransfer(
-        bytes32 from,
-        bytes32 to,
-        uint256 amount,
-        bytes[] calldata signatures
-    ) public whenNotPaused {
-        bytes32 messageHash = keccak256(abi.encodePacked(from, to, amount));
-        
-        if (processedTransfers[messageHash]) revert TransferAlreadyProcessed();
-        if (amount > transferLimit) revert TransferLimitExceeded();
-
-        uint256 validCount;
-        address[] memory uniqueSigners = new address[](signatures.length);
-
-        unchecked {
-            for (uint256 i = 0; i < signatures.length; i++) {
-                address signer = recoverSigner(messageHash, signatures[i]);
-                
-                if (!hasRole(VALIDATOR_ROLE, signer)) revert InvalidSignature();
-                if (isValidationCached(messageHash, signer)) continue;
-                
-                for (uint256 j = 0; j < validCount; j++) {
-                    if (uniqueSigners[j] == signer) revert DuplicateValidator();
-                }
-                
-                uniqueSigners[validCount] = signer;
-                cacheValidation(messageHash, signer);
-                validCount++;
-            }
-        }
-
-        if (validCount < required) revert ValidationFailed();
-        
-        // Update nonce and mark transfer as processed atomically
-        uint256 expectedNonce = nonces[address(uint160(uint256(from)))] + 1;
-        uint256 currentNonce = nonces[address(uint160(uint256(from)))];
-        if (expectedNonce != currentNonce + 1) revert InvalidNonce();
-        
-        nonces[address(uint160(uint256(from)))] = currentNonce + 1;
-        processedTransfers[messageHash] = true;
-        
-        emit Transfer(from, to, amount);
     }
 
     function batchValidateTransfers(
@@ -305,13 +232,13 @@ contract Bridge is IBridge, AccessControl {
         }
     }
 
-    function enableEmergencyMode() external onlyAdmin {
+    function enableEmergencyMode() external onlyRole(DEFAULT_ADMIN_ROLE) {
         emergencyMode = true;
         emergencyTimelock = block.timestamp + 24 hours;
         emit EmergencyModeEnabled(emergencyTimelock);
     }
 
-    function disableEmergencyMode() external onlyAdmin {
+    function disableEmergencyMode() external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (block.timestamp < emergencyTimelock) revert EmergencyModeLocked();
         emergencyMode = false;
         emit EmergencyModeDisabled();
@@ -321,7 +248,7 @@ contract Bridge is IBridge, AccessControl {
         address token,
         address recipient,
         uint256 amount
-    ) external onlyAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (!emergencyMode) revert NotInEmergencyMode();
         if (block.timestamp < emergencyTimelock) revert EmergencyModeLocked();
         
