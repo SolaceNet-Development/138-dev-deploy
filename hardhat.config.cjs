@@ -1,4 +1,3 @@
-require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
