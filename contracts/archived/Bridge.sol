@@ -10,6 +10,10 @@ import { IOracle } from "../interfaces/IOracle.sol";
 contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
+
+    error InsufficientSignatures(uint256 provided, uint256 required);
+    error InvalidValidator(address validator);
+    error DuplicateValidator(address validator);
     
     IOracle public immutable ORACLE;
     uint256 public required;
