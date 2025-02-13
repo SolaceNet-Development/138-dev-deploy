@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 import { IBridge } from "../interfaces/IBridge.sol";
 import { IOracle } from "../interfaces/IOracle.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract Bridge is IBridge {
+contract Bridge is IBridge, AccessControl {
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
     
     IOracle public oracle;
@@ -171,13 +172,13 @@ contract Bridge is IBridge {
     }
 
     // Replace validator mapping with roles
-    function addValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        _grantRole(VALIDATOR_ROLE, validator);
+    function addValidator(address validator) external override onlyAdmin {
+        validators[validator] = true;
         emit ValidatorAdded(validator);
     }
 
-    function removeValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        _revokeRole(VALIDATOR_ROLE, validator);
+    function removeValidator(address validator) external override onlyAdmin {
+        validators[validator] = false;
         emit ValidatorRemoved(validator);
     }
 
