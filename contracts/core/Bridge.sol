@@ -88,7 +88,7 @@ contract Bridge is IBridge, AccessControl {
         bytes32 to,
         uint256 amount,
         bytes[] calldata signatures
-    ) external override whenNotPaused {
+    ) public override whenNotPaused {
         bytes32 messageHash = keccak256(abi.encodePacked(from, to, amount));
         
         if (processedTransfers[messageHash]) revert TransferAlreadyProcessed();
@@ -123,6 +123,24 @@ contract Bridge is IBridge, AccessControl {
         processedTransfers[messageHash] = true;
         
         emit Transfer(from, to, amount);
+    }
+
+    function batchValidateTransfers(
+        bytes32[] calldata froms,
+        bytes32[] calldata tos,
+        uint256[] calldata amounts,
+        bytes[][] calldata signatures
+    ) external whenNotPaused {
+        uint256 length = froms.length;
+        if (length > 20) revert BatchLimitExceeded();
+        if (length != tos.length || length != amounts.length || length != signatures.length) 
+            revert ArrayLengthMismatch();
+
+        unchecked {
+            for(uint256 i = 0; i < length; i++) {
+                validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
+            }
+        }
     }
 
     function recoverSigner(bytes32 message, bytes memory signature) internal pure returns (address) {
@@ -244,21 +262,4 @@ contract Bridge is IBridge, AccessControl {
         }
     }
 
-    function batchValidateTransfers(
-        bytes32[] calldata froms,
-        bytes32[] calldata tos,
-        uint256[] calldata amounts,
-        bytes[][] calldata signatures
-    ) external whenNotPaused {
-        uint256 length = froms.length;
-        if (length > 20) revert BatchLimitExceeded();
-        if (length != tos.length || length != amounts.length || length != signatures.length) 
-            revert ArrayLengthMismatch();
-
-        unchecked {
-            for(uint256 i = 0; i < length; i++) {
-                validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
-            }
-        }
-    }
 }
