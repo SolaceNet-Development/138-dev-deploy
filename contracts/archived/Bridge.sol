@@ -15,10 +15,6 @@ abstract contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
     error InvalidValidator(address validator);
     error DuplicateValidator(address validator);
 
-    function transfer(bytes32 to, uint256 amount) external virtual override;
-
-    function validateTransfer(bytes32 from, bytes32 to, uint256 amount, bytes[] calldata signatures) external virtual override;
-
     function addValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(VALIDATOR_ROLE, validator);
         emit ValidatorAdded(validator);
