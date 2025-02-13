@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../interfaces/IBridge.sol";
-import "../interfaces/IOracle.sol";
+import { IBridge } from "../interfaces/IBridge.sol";
+import { IOracle } from "../interfaces/IOracle.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Bridge is IBridge {
     IOracle public oracle;
@@ -68,13 +69,16 @@ contract Bridge is IBridge {
         _grantRole(OPERATOR_ROLE, msg.sender);
     }
 
+    error NotAdmin();
+    error NotValidator();
+
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Not admin");
+        if (msg.sender != admin) revert NotAdmin();
         _;
     }
 
     modifier onlyValidator() {
-        require(validators[msg.sender], "Not validator");
+        if (!validators[msg.sender]) revert NotValidator();
         _;
     }
 

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../interfaces/IOracle.sol";
+import { IOracle } from "../interfaces/IOracle.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 contract Oracle is IOracle {
+    error PriceNotAvailable(bytes32 asset);
+    
     mapping(bytes32 => uint256) private prices;
     mapping(address => bool) public authorities;
     address public admin;
