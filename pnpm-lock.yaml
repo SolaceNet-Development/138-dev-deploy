@@ -13,13 +13,13 @@ dependencies:
     version: 5.7.0
   '@nomicfoundation/hardhat-chai-matchers':
     specifier: ^2.0.0
-    version: 2.0.8(@nomicfoundation/hardhat-ethers@3.0.8)(chai@5.1.2)(ethers@6.13.5)(hardhat@2.22.18)
+    version: 2.0.8(@nomicfoundation/hardhat-ethers@3.0.8)(chai@4.3.10)(ethers@6.13.5)(hardhat@2.22.18)
   '@nomicfoundation/hardhat-ethers':
     specifier: ^3.0.0
     version: 3.0.8(ethers@6.13.5)(hardhat@2.22.18)
   '@nomicfoundation/hardhat-toolbox':
     specifier: ^4.0.0
-    version: 4.0.0(@nomicfoundation/hardhat-chai-matchers@2.0.8)(@nomicfoundation/hardhat-ethers@3.0.8)(@nomicfoundation/hardhat-verify@2.0.12)(@typechain/ethers-v6@0.5.1)(@typechain/hardhat@9.1.0)(chai@5.1.2)(ethers@6.13.5)(hardhat-gas-reporter@1.0.10)(hardhat@2.22.18)(solidity-coverage@0.8.14)(typechain@8.3.2)
+    version: 4.0.0(@nomicfoundation/hardhat-chai-matchers@2.0.8)(@nomicfoundation/hardhat-ethers@3.0.8)(@nomicfoundation/hardhat-verify@2.0.12)(@typechain/ethers-v6@0.5.1)(@typechain/hardhat@9.1.0)(chai@4.3.10)(ethers@6.13.5)(hardhat-gas-reporter@1.0.10)(hardhat@2.22.18)(solidity-coverage@0.8.14)(typechain@8.3.2)
   '@nomicfoundation/hardhat-verify':
     specifier: ^2.0.12
     version: 2.0.12(hardhat@2.22.18)
@@ -65,8 +65,8 @@ devDependencies:
     specifier: ^2.0.6
     version: 2.0.6(@nomiclabs/hardhat-ethers@2.2.3)(ethereum-waffle@4.0.10)(ethers@6.13.5)(hardhat@2.22.18)
   chai:
-    specifier: ^5.1.2
-    version: 5.1.2
+    specifier: 4.3.10
+    version: 4.3.10
   ethereum-waffle:
     specifier: ^4.0.10
     version: 4.0.10(@ethersproject/abi@5.7.0)(ethers@6.13.5)
@@ -834,7 +834,7 @@ packages:
       '@nomicfoundation/ethereumjs-rlp': 5.0.4
       ethereum-cryptography: 0.1.3
 
-  /@nomicfoundation/hardhat-chai-matchers@2.0.8(@nomicfoundation/hardhat-ethers@3.0.8)(chai@5.1.2)(ethers@6.13.5)(hardhat@2.22.18):
+  /@nomicfoundation/hardhat-chai-matchers@2.0.8(@nomicfoundation/hardhat-ethers@3.0.8)(chai@4.3.10)(ethers@6.13.5)(hardhat@2.22.18):
     resolution: {integrity: sha512-Z5PiCXH4xhNLASROlSUOADfhfpfhYO6D7Hn9xp8PddmHey0jq704cr6kfU8TRrQ4PUZbpfsZadPj+pCfZdjPIg==}
     peerDependencies:
       '@nomicfoundation/hardhat-ethers': ^3.0.0
@@ -844,8 +844,8 @@ packages:
     dependencies:
       '@nomicfoundation/hardhat-ethers': 3.0.8(ethers@6.13.5)(hardhat@2.22.18)
       '@types/chai-as-promised': 7.1.8
-      chai: 5.1.2
-      chai-as-promised: 7.1.2(chai@5.1.2)
+      chai: 4.3.10
+      chai-as-promised: 7.1.2(chai@4.3.10)
       deep-eql: 4.1.4
       ethers: 6.13.5
       hardhat: 2.22.18
@@ -866,7 +866,7 @@ packages:
       - supports-color
     dev: false
 
-  /@nomicfoundation/hardhat-toolbox@4.0.0(@nomicfoundation/hardhat-chai-matchers@2.0.8)(@nomicfoundation/hardhat-ethers@3.0.8)(@nomicfoundation/hardhat-verify@2.0.12)(@typechain/ethers-v6@0.5.1)(@typechain/hardhat@9.1.0)(chai@5.1.2)(ethers@6.13.5)(hardhat-gas-reporter@1.0.10)(hardhat@2.22.18)(solidity-coverage@0.8.14)(typechain@8.3.2):
+  /@nomicfoundation/hardhat-toolbox@4.0.0(@nomicfoundation/hardhat-chai-matchers@2.0.8)(@nomicfoundation/hardhat-ethers@3.0.8)(@nomicfoundation/hardhat-verify@2.0.12)(@typechain/ethers-v6@0.5.1)(@typechain/hardhat@9.1.0)(chai@4.3.10)(ethers@6.13.5)(hardhat-gas-reporter@1.0.10)(hardhat@2.22.18)(solidity-coverage@0.8.14)(typechain@8.3.2):
     resolution: {integrity: sha512-jhcWHp0aHaL0aDYj8IJl80v4SZXWMS1A2XxXa1CA6pBiFfJKuZinCkO6wb+POAt0LIfXB3gA3AgdcOccrcwBwA==}
     peerDependencies:
       '@nomicfoundation/hardhat-chai-matchers': ^2.0.0
@@ -887,12 +887,12 @@ packages:
       typechain: ^8.3.0
       typescript: '>=4.5.0'
     dependencies:
-      '@nomicfoundation/hardhat-chai-matchers': 2.0.8(@nomicfoundation/hardhat-ethers@3.0.8)(chai@5.1.2)(ethers@6.13.5)(hardhat@2.22.18)
+      '@nomicfoundation/hardhat-chai-matchers': 2.0.8(@nomicfoundation/hardhat-ethers@3.0.8)(chai@4.3.10)(ethers@6.13.5)(hardhat@2.22.18)
       '@nomicfoundation/hardhat-ethers': 3.0.8(ethers@6.13.5)(hardhat@2.22.18)
       '@nomicfoundation/hardhat-verify': 2.0.12(hardhat@2.22.18)
       '@typechain/ethers-v6': 0.5.1(ethers@6.13.5)(typechain@8.3.2)
       '@typechain/hardhat': 9.1.0(@typechain/ethers-v6@0.5.1)(ethers@6.13.5)(hardhat@2.22.18)(typechain@8.3.2)
-      chai: 5.1.2
+      chai: 4.3.10
       ethers: 6.13.5
       hardhat: 2.22.18
       hardhat-gas-reporter: 1.0.10(hardhat@2.22.18)
@@ -1578,9 +1578,8 @@ packages:
     engines: {node: '>=0.8'}
     dev: true
 
-  /assertion-error@2.0.1:
-    resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
-    engines: {node: '>=12'}
+  /assertion-error@1.1.0:
+    resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
 
   /ast-parents@0.0.1:
     resolution: {integrity: sha512-XHusKxKz3zoYk1ic8Un640joHbFMhbqneyoZfoKnEGtf2ey9Uh/IdpcQplODdO/kENaMIWsD0nJm4+wX3UNLHA==}
@@ -1839,24 +1838,26 @@ packages:
     dependencies:
       nofilter: 3.1.0
 
-  /chai-as-promised@7.1.2(chai@5.1.2):
+  /chai-as-promised@7.1.2(chai@4.3.10):
     resolution: {integrity: sha512-aBDHZxRzYnUYuIAIPBH2s511DjlKPzXNlXSGFC8CwmroWQLfrW0LtE1nK3MAwwNhJPa9raEjNCmRoFpG0Hurdw==}
     peerDependencies:
       chai: '>= 2.1.2 < 6'
     dependencies:
-      chai: 5.1.2
+      chai: 4.3.10
       check-error: 1.0.3
     dev: false
 
-  /chai@5.1.2:
-    resolution: {integrity: sha512-aGtmf24DW6MLHHG5gCx4zaI3uBq3KRtxeVs0DjFH6Z0rDNbsvTxFASFvdj79pxjxZ8/5u3PIiN3IwEIQkiiuPw==}
-    engines: {node: '>=12'}
+  /chai@4.3.10:
+    resolution: {integrity: sha512-0UXG04VuVbruMUYbJ6JctvH0YnC/4q3/AkT18q4NaITo91CUm0liMS9VqzT9vZhVQ/1eqPanMWjBM+Juhfb/9g==}
+    engines: {node: '>=4'}
     dependencies:
-      assertion-error: 2.0.1
-      check-error: 2.1.1
-      deep-eql: 5.0.2
-      loupe: 3.1.3
-      pathval: 2.0.0
+      assertion-error: 1.1.0
+      check-error: 1.0.3
+      deep-eql: 4.1.4
+      get-func-name: 2.0.2
+      loupe: 2.3.7
+      pathval: 1.1.1
+      type-detect: 4.1.0
 
   /chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -1881,11 +1882,6 @@ packages:
     resolution: {integrity: sha512-iKEoDYaRmd1mxM90a2OEfWhjsjPpYPuQ+lMYsoxB126+t8fw7ySEO48nmDg5COTjxDI65/Y2OWpeEHk3ZOe8zg==}
     dependencies:
       get-func-name: 2.0.2
-    dev: false
-
-  /check-error@2.1.1:
-    resolution: {integrity: sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==}
-    engines: {node: '>= 16'}
 
   /chokidar@3.6.0:
     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
@@ -2166,11 +2162,6 @@ packages:
     engines: {node: '>=6'}
     dependencies:
       type-detect: 4.1.0
-    dev: false
-
-  /deep-eql@5.0.2:
-    resolution: {integrity: sha512-h5k/5U50IJJFpzfL6nO9jaaumfjO/f2NjK/oYB2Djzm4p9L+3T9qWpZqZ2hAbLPuuYq9wrU08WQyBTL5GbPk5Q==}
-    engines: {node: '>=6'}
 
   /deep-extend@0.6.0:
     resolution: {integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==}
@@ -2799,7 +2790,6 @@ packages:
 
   /get-func-name@2.0.2:
     resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
-    dev: false
 
   /get-intrinsic@1.2.7:
     resolution: {integrity: sha512-VW6Pxhsrk0KAOqs3WEd0klDiF/+V7gQOpAvY1jVU/LHmaD/kQO4523aiJuikX/QAKYiW6x8Jh+RJej1almdtCA==}
@@ -3626,8 +3616,10 @@ packages:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
 
-  /loupe@3.1.3:
-    resolution: {integrity: sha512-kkIp7XSkP78ZxJEsSxW3712C6teJVoeHHwgo9zJ380de7IYyJ2ISlxojcH2pC5OFLewESmnRi/+XCDIEEVyoug==}
+  /loupe@2.3.7:
+    resolution: {integrity: sha512-zSMINGVYkdpYSOBmLi0D1Uo7JU9nVdQKrHxC8eYlV+9YKK9WePqAlL7lSlorG/U2Fw1w0hTBmaa/jrQ3UbPHtA==}
+    dependencies:
+      get-func-name: 2.0.2
 
   /lowercase-keys@3.0.0:
     resolution: {integrity: sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==}
@@ -4021,9 +4013,8 @@ packages:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
 
-  /pathval@2.0.0:
-    resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
-    engines: {node: '>= 14.16'}
+  /pathval@1.1.1:
+    resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
 
   /pbkdf2@3.1.2:
     resolution: {integrity: sha512-iuh7L6jA7JEGu2WxDwtQP1ddOpaJNC4KlDEFfdQajSGgGPNi4OyDc2R7QnbY2bR9QjBVGwgvTdNJZoE7RaxUMA==}
@@ -4918,7 +4909,6 @@ packages:
   /type-detect@4.1.0:
     resolution: {integrity: sha512-Acylog8/luQ8L7il+geoSxhEkazvkslg7PSNKOX59mbB9cOveP5aq9h74Y7YU8yDpJwetzQQrfIwtf4Wp4LKcw==}
     engines: {node: '>=4'}
-    dev: false
 
   /type-fest@0.20.2:
     resolution: {integrity: sha512-Ne+eE4r0/iWnpAxD852z3A+N0Bt5RN//NjJwRd2VFHEmrywxf5vsZlh4R6lixl6B+wz/8d+maTSAkN1FIkI3LQ==}
