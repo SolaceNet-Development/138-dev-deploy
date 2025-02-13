@@ -70,14 +70,17 @@ contract Bridge is IBridge, AccessControl {
         _;
     }
 
-    function transfer(bytes32 to, uint256 amount) external payable override whenNotPaused {
-        if (msg.value < fee) revert InsufficientFee();
+    function transfer(bytes32 to, uint256 amount) external override whenNotPaused {
         if (amount == 0) revert InvalidAmount();
         if (amount > transferLimit) revert TransferLimitExceeded();
-        uint256 nonce = nonces[msg.sender] + 1;
-        nonces[msg.sender] = nonce;
+        if (msg.value < fee) revert InsufficientFee();
+
+        bytes32 sender = bytes32(uint256(uint160(msg.sender)));
+        uint256 currentNonce = nonces[sender];
+        nonces[sender] = currentNonce + 1;
         collectedFees[address(0)] += msg.value;
-        emit Transfer(bytes32(uint256(uint160(msg.sender))), to, amount);
+        
+        emit Transfer(sender, to, amount);
     }
 
     function validateTransfer(
