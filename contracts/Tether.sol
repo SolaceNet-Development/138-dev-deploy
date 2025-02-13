@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Tether is Pausable, Ownable {
+    error InsufficientBalance(uint256 available, uint256 required);
+    error InsufficientAllowance(uint256 available, uint256 required);
+
     string public name = "Tether";
     string public symbol = "USDT";
     uint8 public decimals = 18;
@@ -22,7 +25,7 @@ contract Tether is Pausable, Ownable {
     }
 
     function transfer(address _to, uint256 _value) public whenNotPaused returns (bool) {
-        require(balanceOf[msg.sender] >= _value);
+        if (balanceOf[msg.sender] < _value) revert InsufficientBalance(balanceOf[msg.sender], _value);
         balanceOf[msg.sender] -= _value;
         balanceOf[_to] += _value;
         emit Transfer(msg.sender, _to, _value);
@@ -36,8 +39,8 @@ contract Tether is Pausable, Ownable {
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused returns (bool) {
-        require(_value <= balanceOf[_from]);
-        require(_value <= allowance[_from][msg.sender]);
+        if (_value > balanceOf[_from]) revert InsufficientBalance(balanceOf[_from], _value);
+        if (_value > allowance[_from][msg.sender]) revert InsufficientAllowance(allowance[_from][msg.sender], _value);
         balanceOf[_from] -= _value;
         balanceOf[_to] += _value;
         allowance[_from][msg.sender] -= _value;

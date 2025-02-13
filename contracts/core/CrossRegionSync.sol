@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../interfaces/IOracle.sol";
+import { IOracle } from "../interfaces/IOracle.sol";
 
 contract CrossRegionSync {
     mapping(uint256 => address) public regions;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "../interfaces/IBridge.sol";
-import "../interfaces/IOracle.sol";
+import { IBridge } from "../interfaces/IBridge.sol";
+import { IOracle } from "../interfaces/IOracle.sol";
 
 contract RegionBridge is IBridge {
     // Implementation will be added later
