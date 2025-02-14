@@ -1,0 +1,25 @@
+{
+  "useWhiteList": true,
+  "jdbc": {
+    "url": "jdbc:postgresql://localhost:5432/tessera",
+    "username": "tessera",
+    "password": "tessera"
+  },
+  "serverConfigs": [{
+    "app": "Q2T",
+    "serverAddress": "http://localhost:9102",
+    "communicationType": "REST"
+  }, {
+    "app": "P2P",
+    "serverAddress": "http://localhost:9101",
+    "communicationType": "REST"
+  }],
+  "peer": [],
+  "keys": {
+    "keyData": [{
+      "privateKeyPath": "nodeKey.key",
+      "publicKeyPath": "nodeKey.pub"
+    }]
+  },
+  "alwaysSendTo": []
+}
