@@ -204,10 +204,11 @@ describe("Bridge Contract", function () {
             const fee = await bridge.fee();
             
             await bridge.transfer(to, ethers.parseEther("1.0"), { value: fee });
-            expect(await bridge.nonces(bytes32(uint256(uint160(owner.address))))).to.equal(1);
+            const ownerBytes32 = ethers.zeroPadValue(ethers.hexlify(BigInt(owner.address)), 32);
+            expect(await bridge.nonces(ownerBytes32)).to.equal(1);
             
             await bridge.transfer(to, ethers.parseEther("2.0"), { value: fee });
-            expect(await bridge.nonces(bytes32(uint256(uint160(owner.address))))).to.equal(2);
+            expect(await bridge.nonces(ownerBytes32)).to.equal(2);
         });
     });
 
