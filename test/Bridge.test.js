@@ -41,16 +41,14 @@ describe("Bridge Contract", function () {
     describe("Transfer validation", function() {
         it("Should validate transfer with sufficient valid signatures", async function() {
             const [from, to, amount] = [
-                ethers.utils.hexZeroPad(addr1.address, 32),
-                ethers.utils.hexZeroPad(addr2.address, 32),
-                ethers.utils.parseEther("1.0")
+                ethers.zeroPadValue(addr1.address, 32),
+                ethers.zeroPadValue(addr2.address, 32),
+                ethers.parseEther("1.0")
             ];
             
-            const message = ethers.utils.keccak256(
-                ethers.utils.solidityPack(
-                    ["bytes32", "bytes32", "uint256"],
-                    [from, to, amount]
-                )
+            const message = ethers.solidityPackedKeccak256(
+                ["bytes32", "bytes32", "uint256"],
+                [from, to, amount]
             );
 
             // Add validators
@@ -59,9 +57,9 @@ describe("Bridge Contract", function () {
 
             // Get signatures
             const signatures = [
-                await owner.signMessage(ethers.utils.arrayify(message)),
-                await addr1.signMessage(ethers.utils.arrayify(message)),
-                await addr2.signMessage(ethers.utils.arrayify(message))
+                await owner.signMessage(ethers.getBytes(message)),
+                await addr1.signMessage(ethers.getBytes(message)),
+                await addr2.signMessage(ethers.getBytes(message))
             ];
 
             await expect(bridge.validateTransfer(from, to, amount, signatures))
@@ -121,16 +119,16 @@ describe("Bridge Contract", function () {
 
         it("Should process batch transfers", async function() {
             const froms = [
-                ethers.utils.hexZeroPad(addr1.address, 32),
-                ethers.utils.hexZeroPad(addr2.address, 32)
+                ethers.zeroPadValue(addr1.address, 32),
+                ethers.zeroPadValue(addr2.address, 32)
             ];
             const tos = [
-                ethers.utils.hexZeroPad(addr2.address, 32),
-                ethers.utils.hexZeroPad(addr1.address, 32)
+                ethers.zeroPadValue(addr2.address, 32),
+                ethers.zeroPadValue(addr1.address, 32)
             ];
             const amounts = [
-                ethers.utils.parseEther("1.0"),
-                ethers.utils.parseEther("2.0")
+                ethers.parseEther("1.0"),
+                ethers.parseEther("2.0")
             ];
             
             // Setup signatures for both transfers
@@ -193,17 +191,18 @@ describe("Bridge Contract", function () {
 
     describe("Role-based access control", function() {
         it("Should grant and revoke roles correctly", async function() {
-            expect(await bridge.hasRole(await bridge.OPERATOR_ROLE(), owner.address)).to.be.true;
+            const OPERATOR_ROLE = await bridge.OPERATOR_ROLE();
+            expect(await bridge.hasRole(OPERATOR_ROLE, owner.address)).to.be.true;
             
-            await bridge.grantRole(await bridge.OPERATOR_ROLE(), addr1.address);
-            expect(await bridge.hasRole(await bridge.OPERATOR_ROLE(), addr1.address)).to.be.true;
+            await bridge.grantRole(OPERATOR_ROLE, addr1.address);
+            expect(await bridge.hasRole(OPERATOR_ROLE, addr1.address)).to.be.true;
             
-            await bridge.revokeRole(await bridge.OPERATOR_ROLE(), addr1.address);
-            expect(await bridge.hasRole(await bridge.OPERATOR_ROLE(), addr1.address)).to.be.false;
+            await bridge.revokeRole(OPERATOR_ROLE, addr1.address);
+            expect(await bridge.hasRole(OPERATOR_ROLE, addr1.address)).to.be.false;
         });
 
         it("Should cache and expire validations", async function() {
-            const messageHash = ethers.utils.id("test");
+            const messageHash = ethers.id("test");
             const validator = addr1.address;
             
             await bridge.cacheValidation(messageHash, validator);
