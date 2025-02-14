@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../interfaces/IBridge.sol";
-import "../interfaces/IOracle.sol";
+import { IBridge } from "../interfaces/IBridge.sol";
+import { IOracle } from "../interfaces/IOracle.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract Bridge is IBridge {
+contract Bridge is IBridge, AccessControl {
+    bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
+    
     IOracle public oracle;
-    mapping(address => bool) public validators;
     uint256 public required;
-    address public admin;
     bool public paused;
     uint256 public transferLimit;
     mapping(bytes32 => bool) public processedTransfers;
@@ -41,41 +43,32 @@ contract Bridge is IBridge {
     error InsufficientFee();
     error InvalidNonce();
     error FeeWithdrawalFailed();
+    error InvalidOracleAddress();
+    error InvalidValidatorCount();
     error InvalidSignature();
     error DuplicateValidator();
     error ValidationFailed();
-    error RoleRequired(bytes32 role);
     error ValidationExpired();
     error CacheNotFound();
+    error InvalidSignatureLength(uint256 length);
+    error InvalidSignatureV(uint8 v);
+    error ArrayLengthMismatch();
 
-    // Add role constants
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-    bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
-    
     // Add validation cache
     mapping(bytes32 => mapping(address => bool)) private validationCache;
     uint256 private constant MAX_CACHE_AGE = 1 hours;
     mapping(bytes32 => uint256) public validationTimestamps;
 
     constructor(address _oracle, uint256 _required) {
+        if (_oracle == address(0)) revert InvalidOracleAddress();
+        if (_required == 0) revert InvalidValidatorCount();
+        
         oracle = IOracle(_oracle);
         required = _required;
-        admin = msg.sender;
-        validators[msg.sender] = true;
         transferLimit = 1000 ether; // Default limit
         fee = 0.001 ether; // Default fee of 0.001 ETH
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(OPERATOR_ROLE, msg.sender);
-    }
-
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "Not admin");
-        _;
-    }
-
-    modifier onlyValidator() {
-        require(validators[msg.sender], "Not validator");
-        _;
+        _grantRole(VALIDATOR_ROLE, msg.sender);
     }
 
     modifier whenNotPaused() {
@@ -87,19 +80,21 @@ contract Bridge is IBridge {
         if (msg.value < fee) revert InsufficientFee();
         if (amount == 0) revert InvalidAmount();
         if (amount > transferLimit) revert TransferLimitExceeded();
-        uint256 nonce = nonces[msg.sender] + 1;
-        nonces[msg.sender] = nonce;
+
+        bytes32 sender = bytes32(uint256(uint160(msg.sender)));
+        uint256 currentNonce = nonces[sender];
+        nonces[sender] = currentNonce + 1;
         collectedFees[address(0)] += msg.value;
-        // Implementation details
-        emit Transfer(bytes32(uint256(uint160(msg.sender))), to, amount);
+        
+        emit Transfer(sender, to, amount);
     }
 
-    function validateTransfer(
+    function _validateTransfer(
         bytes32 from,
         bytes32 to,
         uint256 amount,
         bytes[] calldata signatures
-    ) external override whenNotPaused {
+    ) internal whenNotPaused {
         bytes32 messageHash = keccak256(abi.encodePacked(from, to, amount));
         
         if (processedTransfers[messageHash]) revert TransferAlreadyProcessed();
@@ -128,10 +123,9 @@ contract Bridge is IBridge {
         if (validCount < required) revert ValidationFailed();
         
         // Update nonce and mark transfer as processed atomically
-        uint256 expectedNonce = nonces[address(uint160(uint256(from)))] + 1;
-        if (expectedNonce != nonce) revert InvalidNonce();
-        
-        nonces[address(uint160(uint256(from)))] = nonce;
+        uint256 currentNonce = nonces[from];
+        uint256 expectedNonce = currentNonce + 1;
+        nonces[from] = expectedNonce;
         processedTransfers[messageHash] = true;
         
         emit Transfer(from, to, amount);
@@ -142,7 +136,7 @@ contract Bridge is IBridge {
         bytes32 s;
         uint8 v;
 
-        require(signature.length == 65, "Invalid signature length");
+        if (signature.length != 65) revert InvalidSignatureLength(signature.length);
 
         assembly {
             r := mload(add(signature, 32))
@@ -151,7 +145,7 @@ contract Bridge is IBridge {
         }
 
         if (v < 27) v += 27;
-        require(v == 27 || v == 28, "Invalid signature v value");
+        if (v != 27 && v != 28) revert InvalidSignatureV(v);
 
         return ecrecover(
             keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", message)),
@@ -161,7 +155,6 @@ contract Bridge is IBridge {
         );
     }
 
-    // Replace validator mapping with roles
     function addValidator(address validator) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(VALIDATOR_ROLE, validator);
         emit ValidatorAdded(validator);
@@ -172,17 +165,17 @@ contract Bridge is IBridge {
         emit ValidatorRemoved(validator);
     }
 
-    function setTransferLimit(uint256 _limit) external onlyAdmin {
+    function setTransferLimit(uint256 _limit) external onlyRole(DEFAULT_ADMIN_ROLE) {
         transferLimit = _limit;
         emit TransferLimitUpdated(_limit);
     }
 
-    function setFee(uint256 _fee) external onlyAdmin {
+    function setFee(uint256 _fee) external onlyRole(DEFAULT_ADMIN_ROLE) {
         fee = _fee;
         emit FeeUpdated(_fee);
     }
 
-    function withdrawFees(address token, address recipient) external onlyAdmin {
+    function withdrawFees(address token, address recipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 amount = collectedFees[token];
         if (amount == 0) revert FeeWithdrawalFailed();
         
@@ -198,65 +191,45 @@ contract Bridge is IBridge {
         emit FeesWithdrawn(token, recipient, amount);
     }
 
-    function pause() external onlyAdmin {
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         paused = true;
         emit BridgePaused(msg.sender);
     }
 
-    function unpause() external onlyAdmin {
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         paused = false;
         emit BridgeUnpaused(msg.sender);
     }
 
-    function addSupportedToken(address token) external onlyAdmin {
+    function addSupportedToken(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
         supportedTokens[token] = true;
         emit TokenAdded(token);
     }
 
-    function removeSupportedToken(address token) external onlyAdmin {
+    function removeSupportedToken(address token) external onlyRole(DEFAULT_ADMIN_ROLE) {
         supportedTokens[token] = false;
         emit TokenRemoved(token);
     }
 
-    // Add validation caching
-    function cacheValidation(bytes32 messageHash, address validator) internal {
+    function cacheValidation(bytes32 messageHash, address validator) public onlyRole(DEFAULT_ADMIN_ROLE) {
         validationCache[messageHash][validator] = true;
         validationTimestamps[messageHash] = block.timestamp;
     }
 
-    function isValidationCached(bytes32 messageHash, address validator) internal view returns (bool) {
+    function isValidationCached(bytes32 messageHash, address validator) public view returns (bool) {
         if (block.timestamp > validationTimestamps[messageHash] + MAX_CACHE_AGE) {
             return false;
         }
         return validationCache[messageHash][validator];
     }
 
-    // Add batch operation gas optimization
-    function batchValidateTransfers(
-        bytes32[] calldata froms,
-        bytes32[] calldata tos,
-        uint256[] calldata amounts,
-        bytes[][] calldata signatures
-    ) external whenNotPaused {
-        uint256 length = froms.length;
-        if (length > 20) revert BatchLimitExceeded();
-        if (length != tos.length || length != amounts.length || length != signatures.length) 
-            revert("Array length mismatch");
-
-        unchecked {
-            for(uint256 i = 0; i < length; i++) {
-                validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
-            }
-        }
-    }
-
-    function enableEmergencyMode() external onlyAdmin {
+    function enableEmergencyMode() external onlyRole(DEFAULT_ADMIN_ROLE) {
         emergencyMode = true;
         emergencyTimelock = block.timestamp + 24 hours;
         emit EmergencyModeEnabled(emergencyTimelock);
     }
 
-    function disableEmergencyMode() external onlyAdmin {
+    function disableEmergencyMode() external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (block.timestamp < emergencyTimelock) revert EmergencyModeLocked();
         emergencyMode = false;
         emit EmergencyModeDisabled();
@@ -266,7 +239,7 @@ contract Bridge is IBridge {
         address token,
         address recipient,
         uint256 amount
-    ) external onlyAdmin {
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (!emergencyMode) revert NotInEmergencyMode();
         if (block.timestamp < emergencyTimelock) revert EmergencyModeLocked();
         
@@ -274,6 +247,33 @@ contract Bridge is IBridge {
             payable(recipient).transfer(amount);
         } else {
             IERC20(token).transfer(recipient, amount);
+        }
+    }
+
+    function validateTransfer(
+        bytes32 from,
+        bytes32 to,
+        uint256 amount,
+        bytes[] calldata signatures
+    ) external override whenNotPaused {
+        _validateTransfer(from, to, amount, signatures);
+    }
+
+    function batchValidateTransfers(
+        bytes32[] calldata froms,
+        bytes32[] calldata tos,
+        uint256[] calldata amounts,
+        bytes[][] calldata signatures
+    ) external whenNotPaused {
+        uint256 length = froms.length;
+        if (length > 20) revert BatchLimitExceeded();
+        if (length != tos.length || length != amounts.length || length != signatures.length) 
+            revert ArrayLengthMismatch();
+
+        unchecked {
+            for(uint256 i = 0; i < length; i++) {
+                _validateTransfer(froms[i], tos[i], amounts[i], signatures[i]);
+            }
         }
     }
 }

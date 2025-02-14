@@ -6,7 +6,7 @@ interface IBridge {
     event ValidatorAdded(address indexed validator);
     event ValidatorRemoved(address indexed validator);
 
-    function transfer(bytes32 to, uint256 amount) external;
+    function transfer(bytes32 to, uint256 amount) external payable;
     function validateTransfer(bytes32 from, bytes32 to, uint256 amount, bytes[] calldata signatures) external;
     function addValidator(address validator) external;
     function removeValidator(address validator) external;

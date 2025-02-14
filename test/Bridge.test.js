@@ -7,10 +7,12 @@ describe("Bridge Contract", function () {
 
     async function deployBridgeFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
-        const Oracle = await ethers.getContractFactory("Oracle");
+        const Oracle = await ethers.getContractFactory("contracts/core/Oracle.sol:Oracle");
         const oracle = await Oracle.deploy();
-        const Bridge = await ethers.getContractFactory("Bridge");
-        const bridge = await Bridge.deploy(oracle.address, 3);
+        await oracle.waitForDeployment();
+        const Bridge = await ethers.getContractFactory("contracts/core/Bridge.sol:Bridge");
+        const bridge = await Bridge.deploy(await oracle.getAddress(), 3);
+        await bridge.waitForDeployment();
         return { bridge, oracle, owner, addr1, addr2 };
     }
 
@@ -19,33 +21,34 @@ describe("Bridge Contract", function () {
     });
 
     it("Should set the right admin", async function () {
-        expect(await bridge.admin()).to.equal(owner.address);
+        const DEFAULT_ADMIN_ROLE = await bridge.DEFAULT_ADMIN_ROLE();
+        expect(await bridge.hasRole(DEFAULT_ADMIN_ROLE, owner.address)).to.be.true;
     });
 
     it("Should add a validator", async function () {
         await bridge.addValidator(addr1.address);
-        expect(await bridge.validators(addr1.address)).to.be.true;
+        const VALIDATOR_ROLE = await bridge.VALIDATOR_ROLE();
+        expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.true;
     });
 
     it("Should remove a validator", async function () {
         await bridge.addValidator(addr1.address);
         await bridge.removeValidator(addr1.address);
-        expect(await bridge.validators(addr1.address)).to.be.false;
+        const VALIDATOR_ROLE = await bridge.VALIDATOR_ROLE();
+        expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.false;
     });
 
     describe("Transfer validation", function() {
         it("Should validate transfer with sufficient valid signatures", async function() {
             const [from, to, amount] = [
-                ethers.utils.hexZeroPad(addr1.address, 32),
-                ethers.utils.hexZeroPad(addr2.address, 32),
-                ethers.utils.parseEther("1.0")
+                ethers.zeroPadValue(addr1.address, 32),
+                ethers.zeroPadValue(addr2.address, 32),
+                ethers.parseEther("1.0")
             ];
             
-            const message = ethers.utils.keccak256(
-                ethers.utils.solidityPack(
-                    ["bytes32", "bytes32", "uint256"],
-                    [from, to, amount]
-                )
+            const message = ethers.solidityPackedKeccak256(
+                ["bytes32", "bytes32", "uint256"],
+                [from, to, amount]
             );
 
             // Add validators
@@ -54,9 +57,9 @@ describe("Bridge Contract", function () {
 
             // Get signatures
             const signatures = [
-                await owner.signMessage(ethers.utils.arrayify(message)),
-                await addr1.signMessage(ethers.utils.arrayify(message)),
-                await addr2.signMessage(ethers.utils.arrayify(message))
+                await owner.signMessage(ethers.getBytes(message)),
+                await addr1.signMessage(ethers.getBytes(message)),
+                await addr2.signMessage(ethers.getBytes(message))
             ];
 
             await expect(bridge.validateTransfer(from, to, amount, signatures))
@@ -67,28 +70,49 @@ describe("Bridge Contract", function () {
 
     describe("Transfer limits and pausing", function() {
         it("Should enforce transfer limits", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
-            const overLimit = ethers.utils.parseEther("1001");
+            const to = ethers.zeroPadValue(addr1.address, 32);
+            const overLimit = ethers.parseEther("1001");
             
-            await expect(bridge.transfer(to, overLimit))
+            const fee = await bridge.fee();
+            await expect(bridge.transfer(to, overLimit, { value: fee }))
                 .to.be.revertedWithCustomError(bridge, "TransferLimitExceeded");
         });
 
         it("Should pause and unpause transfers", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
-            const amount = ethers.utils.parseEther("1.0");
+            const to = ethers.zeroPadValue(addr1.address, 32);
+            const amount = ethers.parseEther("1.0");
 
+            const fee = await bridge.fee();
             await bridge.pause();
-            await expect(bridge.transfer(to, amount))
+            await expect(bridge.transfer(to, amount, { value: fee }))
                 .to.be.revertedWithCustomError(bridge, "TransferPaused");
 
             await bridge.unpause();
-            await expect(bridge.transfer(to, amount))
+            await expect(bridge.transfer(to, amount, { value: fee }))
                 .to.emit(bridge, "Transfer");
         });
 
         it("Should prevent duplicate transfer processing", async function() {
-            // Test setup code...
+            const [from, to, amount] = [
+                ethers.zeroPadValue(addr1.address, 32),
+                ethers.zeroPadValue(addr2.address, 32),
+                ethers.parseEther("1.0")
+            ];
+            
+            const message = ethers.solidityPackedKeccak256(
+                ["bytes32", "bytes32", "uint256"],
+                [from, to, amount]
+            );
+
+            await bridge.addValidator(addr1.address);
+            await bridge.addValidator(addr2.address);
+
+            const signatures = [
+                await owner.signMessage(ethers.getBytes(message)),
+                await addr1.signMessage(ethers.getBytes(message)),
+                await addr2.signMessage(ethers.getBytes(message))
+            ];
+            
             await expect(bridge.validateTransfer(from, to, amount, signatures))
                 .to.emit(bridge, "Transfer");
             
@@ -101,31 +125,32 @@ describe("Bridge Contract", function () {
         let mockToken;
         
         beforeEach(async function() {
-            const MockToken = await ethers.getContractFactory("MockERC20");
+            const MockToken = await ethers.getContractFactory("contracts/mocks/MockERC20.sol:MockERC20");
             mockToken = await MockToken.deploy("Mock", "MCK");
-            await mockToken.deployed();
+            await mockToken.waitForDeployment();
+            mockToken = await mockToken.getAddress();
         });
 
         it("Should manage supported tokens", async function() {
-            await bridge.addSupportedToken(mockToken.address);
-            expect(await bridge.supportedTokens(mockToken.address)).to.be.true;
+            await bridge.addSupportedToken(mockToken);
+            expect(await bridge.supportedTokens(mockToken)).to.be.true;
             
-            await bridge.removeSupportedToken(mockToken.address);
-            expect(await bridge.supportedTokens(mockToken.address)).to.be.false;
+            await bridge.removeSupportedToken(mockToken);
+            expect(await bridge.supportedTokens(mockToken)).to.be.false;
         });
 
         it("Should process batch transfers", async function() {
             const froms = [
-                ethers.utils.hexZeroPad(addr1.address, 32),
-                ethers.utils.hexZeroPad(addr2.address, 32)
+                ethers.zeroPadValue(addr1.address, 32),
+                ethers.zeroPadValue(addr2.address, 32)
             ];
             const tos = [
-                ethers.utils.hexZeroPad(addr2.address, 32),
-                ethers.utils.hexZeroPad(addr1.address, 32)
+                ethers.zeroPadValue(addr2.address, 32),
+                ethers.zeroPadValue(addr1.address, 32)
             ];
             const amounts = [
-                ethers.utils.parseEther("1.0"),
-                ethers.utils.parseEther("2.0")
+                ethers.parseEther("1.0"),
+                ethers.parseEther("2.0")
             ];
             
             // Setup signatures for both transfers
@@ -150,55 +175,57 @@ describe("Bridge Contract", function () {
 
     describe("Fee management", function() {
         it("Should collect fees on transfer", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
-            const amount = ethers.utils.parseEther("1.0");
+            const to = ethers.zeroPadValue(addr1.address, 32);
+            const amount = ethers.parseEther("1.0");
             const fee = await bridge.fee();
             
             await expect(bridge.transfer(to, amount, { value: fee }))
                 .to.emit(bridge, "Transfer");
                 
-            expect(await bridge.collectedFees(ethers.constants.AddressZero))
+            expect(await bridge.collectedFees(ethers.ZeroAddress))
                 .to.equal(fee);
         });
 
         it("Should withdraw collected fees", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
+            const to = ethers.zeroPadValue(addr1.address, 32);
             const fee = await bridge.fee();
             
-            await bridge.transfer(to, ethers.utils.parseEther("1.0"), { value: fee });
+            await bridge.transfer(to, ethers.parseEther("1.0"), { value: fee });
             
             const beforeBalance = await ethers.provider.getBalance(addr2.address);
-            await bridge.withdrawFees(ethers.constants.AddressZero, addr2.address);
+            await bridge.withdrawFees(ethers.ZeroAddress, addr2.address);
             
             const afterBalance = await ethers.provider.getBalance(addr2.address);
-            expect(afterBalance.sub(beforeBalance)).to.equal(fee);
+            expect(afterBalance - beforeBalance).to.equal(fee);
         });
 
         it("Should track nonces correctly", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
+            const to = ethers.zeroPadValue(addr1.address, 32);
             const fee = await bridge.fee();
             
-            await bridge.transfer(to, ethers.utils.parseEther("1.0"), { value: fee });
-            expect(await bridge.nonces(owner.address)).to.equal(1);
+            await bridge.transfer(to, ethers.parseEther("1.0"), { value: fee });
+            const ownerBytes32 = ethers.zeroPadValue(ethers.getAddress(owner.address), 32);
+            expect(await bridge.nonces(ownerBytes32)).to.equal(1);
             
-            await bridge.transfer(to, ethers.utils.parseEther("2.0"), { value: fee });
-            expect(await bridge.nonces(owner.address)).to.equal(2);
+            await bridge.transfer(to, ethers.parseEther("2.0"), { value: fee });
+            expect(await bridge.nonces(ownerBytes32)).to.equal(2);
         });
     });
 
     describe("Role-based access control", function() {
         it("Should grant and revoke roles correctly", async function() {
-            expect(await bridge.hasRole(await bridge.OPERATOR_ROLE(), owner.address)).to.be.true;
+            const VALIDATOR_ROLE = await bridge.VALIDATOR_ROLE();
+            expect(await bridge.hasRole(VALIDATOR_ROLE, owner.address)).to.be.true;
             
-            await bridge.grantRole(await bridge.OPERATOR_ROLE(), addr1.address);
-            expect(await bridge.hasRole(await bridge.OPERATOR_ROLE(), addr1.address)).to.be.true;
+            await bridge.grantRole(VALIDATOR_ROLE, addr1.address);
+            expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.true;
             
-            await bridge.revokeRole(await bridge.OPERATOR_ROLE(), addr1.address);
-            expect(await bridge.hasRole(await bridge.OPERATOR_ROLE(), addr1.address)).to.be.false;
+            await bridge.revokeRole(VALIDATOR_ROLE, addr1.address);
+            expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.false;
         });
 
         it("Should cache and expire validations", async function() {
-            const messageHash = ethers.utils.id("test");
+            const messageHash = ethers.id("test");
             const validator = addr1.address;
             
             await bridge.cacheValidation(messageHash, validator);
