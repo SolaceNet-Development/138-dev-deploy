@@ -135,8 +135,8 @@ describe("Bridge Contract", function () {
             await bridge.addSupportedToken(mockToken);
             expect(await bridge.supportedTokens(mockToken)).to.be.true;
             
-            await bridge.removeSupportedToken(mockToken.address);
-            expect(await bridge.supportedTokens(mockToken.address)).to.be.false;
+            await bridge.removeSupportedToken(mockToken);
+            expect(await bridge.supportedTokens(mockToken)).to.be.false;
         });
 
         it("Should process batch transfers", async function() {
@@ -204,10 +204,10 @@ describe("Bridge Contract", function () {
             const fee = await bridge.fee();
             
             await bridge.transfer(to, ethers.parseEther("1.0"), { value: fee });
-            expect(await bridge.nonces(ethers.zeroPadValue(owner.address, 32))).to.equal(1);
+            expect(await bridge.nonces(bytes32(uint256(uint160(owner.address))))).to.equal(1);
             
             await bridge.transfer(to, ethers.parseEther("2.0"), { value: fee });
-            expect(await bridge.nonces(ethers.zeroPadValue(owner.address, 32))).to.equal(2);
+            expect(await bridge.nonces(bytes32(uint256(uint160(owner.address))))).to.equal(2);
         });
     });
 
