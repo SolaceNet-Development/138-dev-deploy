@@ -1,0 +1,41 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Hyperledger Network Metrics",
+    "panels": [
+      {
+        "title": "Transaction Throughput",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(besu_blockchain_transactions_total[5m])",
+            "legendFormat": "TPS"
+          }
+        ]
+      },
+      {
+        "title": "Block Production Rate",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(besu_blockchain_height[5m])",
+            "legendFormat": "Blocks/min"
+          }
+        ]
+      },
+      {
+        "title": "Network Latency",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(besu_network_peer_latency_seconds[5m])",
+            "legendFormat": "Peer Latency"
+          }
+        ]
+      }
+    ]
+  }
+}

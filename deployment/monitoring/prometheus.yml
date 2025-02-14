@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'besu'
+    static_configs:
+      - targets: ['localhost:9545']
+    metrics_path: '/metrics'
+    scheme: 'http'
+
+  - job_name: 'firefly'
+    static_configs:
+      - targets: ['firefly:5000']
+    metrics_path: '/metrics'
+
+  - job_name: 'cacti'
+    static_configs:
+      - targets: ['cacti-api:3000']
+    metrics_path: '/metrics'
+
+  - job_name: 'identus'
+    static_configs:
+      - targets: ['identus-core:7000']
+    metrics_path: '/metrics'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+      - targets: ['alertmanager:9093']
