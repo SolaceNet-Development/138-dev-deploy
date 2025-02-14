@@ -7,9 +7,9 @@ describe("Bridge Contract", function () {
 
     async function deployBridgeFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
-        const Oracle = await ethers.getContractFactory("contracts/core/Oracle.sol:Oracle");
+        const Oracle = await ethers.getContractFactory("contracts/archived/Oracle.sol:Oracle");
         const oracle = await Oracle.deploy();
-        const Bridge = await ethers.getContractFactory("contracts/core/Bridge.sol:Bridge");
+        const Bridge = await ethers.getContractFactory("contracts/archived/Bridge.sol:Bridge");
         const bridge = await Bridge.deploy(oracle.address, 3);
         return { bridge, oracle, owner, addr1, addr2 };
     }
@@ -19,7 +19,8 @@ describe("Bridge Contract", function () {
     });
 
     it("Should set the right admin", async function () {
-        expect(await bridge.admin()).to.equal(owner.address);
+        const DEFAULT_ADMIN_ROLE = await bridge.DEFAULT_ADMIN_ROLE();
+        expect(await bridge.hasRole(DEFAULT_ADMIN_ROLE, owner.address)).to.be.true;
     });
 
     it("Should add a validator", async function () {
