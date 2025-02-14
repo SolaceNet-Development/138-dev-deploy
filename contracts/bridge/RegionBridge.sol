@@ -18,7 +18,7 @@ contract RegionBridge is IBridge {
         return false;
     }
 
-    function transfer(bytes32 /* to */, uint256 /* amount */) external pure {
+    function transfer(bytes32 /* to */, uint256 /* amount */) external payable {
         revert NotImplemented();
     }
 
