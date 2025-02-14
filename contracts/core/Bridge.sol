@@ -43,6 +43,8 @@ contract Bridge is IBridge, AccessControl {
     error InsufficientFee();
     error InvalidNonce();
     error FeeWithdrawalFailed();
+    error InvalidOracleAddress();
+    error InvalidValidatorCount();
     error InvalidSignature();
     error DuplicateValidator();
     error ValidationFailed();
