@@ -1,0 +1,7 @@
+accounts-allowlist=["*"]
+nodes-allowlist=[]  # Will be populated during deployment with validator node enode URLs
+
+[permissions]
+enabled=true
+provider="contract"
+contract-address=""  # Will be populated during deployment
