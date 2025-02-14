@@ -7,14 +7,12 @@ describe("Bridge Contract", function () {
 
     async function deployBridgeFixture() {
         const [owner, addr1, addr2] = await ethers.getSigners();
-        const Oracle = await ethers.getContractFactory("Oracle", {
-            paths: ["contracts/core/Oracle.sol"]
-        });
+        const Oracle = await ethers.getContractFactory("contracts/core/Oracle.sol:Oracle");
         const oracle = await Oracle.deploy();
-        const Bridge = await ethers.getContractFactory("Bridge", {
-            paths: ["contracts/core/Bridge.sol"]
-        });
+        await oracle.deployed();
+        const Bridge = await ethers.getContractFactory("contracts/core/Bridge.sol:Bridge");
         const bridge = await Bridge.deploy(oracle.address, 3);
+        await bridge.deployed();
         return { bridge, oracle, owner, addr1, addr2 };
     }
 
