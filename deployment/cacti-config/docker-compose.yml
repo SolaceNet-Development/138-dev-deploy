@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  cacti-api:
+    image: hyperledger/cacti-api:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./cacti.config.json:/etc/cacti/config.json
+    environment:
+      - CACTI_API_PORT=3000
+      - CACTI_LOG_LEVEL=info
+      - CACTI_BLOCKCHAIN_CONNECTORS=ethereum,fabric
+    depends_on:
+      - cacti-validator
+
+  cacti-validator:
+    image: hyperledger/cacti-validator:latest
+    ports:
+      - "4000:4000"
+    environment:
+      - VALIDATOR_PORT=4000
+      - VALIDATOR_LOG_LEVEL=info
+
+  cacti-relay:
+    image: hyperledger/cacti-relay:latest
+    ports:
+      - "5100:5100"
+    environment:
+      - RELAY_PORT=5100
+      - RELAY_LOG_LEVEL=info

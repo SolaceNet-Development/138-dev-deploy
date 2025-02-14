@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  firefly:
+    image: hyperledger/firefly:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./firefly.core.yaml:/etc/firefly/config.yaml
+    environment:
+      - FF_CORS_ORIGINS=*
+      - FF_DATABASE_TYPE=postgres
+      - FF_DATABASE_URL=postgres://firefly:firefly@postgres:5432/firefly
+      - FF_BLOCKCHAIN_TYPE=ethereum
+      - FF_BLOCKCHAIN_ETHEREUM_URL=http://besu:8545
+    depends_on:
+      - postgres
+      - ipfs
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=firefly
+      - POSTGRES_PASSWORD=firefly
+      - POSTGRES_DB=firefly
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ipfs:
+    image: ipfs/kubo:latest
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+    volumes:
+      - ipfs_data:/data/ipfs
+
+volumes:
+  postgres_data:
+  ipfs_data:
