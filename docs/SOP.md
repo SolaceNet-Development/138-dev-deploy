@@ -177,21 +177,43 @@ node scripts/deploy-with-defender.js
 
 ### 6.1 Development
 - Local Hardhat Node
-- Memory: 2GB
-- Storage: 50GB
-- Network: Local
+  - Memory: 2GB RAM
+  - Storage: 50GB SSD
+  - Network: Local (http://127.0.0.1:8545)
+  - Gas Limit: 12,000,000
+  - Block Time: 2 seconds
+  - Chain ID: 1337
 
-### 6.2 Staging
-- Polygon Mumbai Testnet
-- Memory: 4GB
-- Storage: 100GB
-- Network: Testnet
+### 6.2 Staging (Polygon Mumbai)
+- Network Configuration
+  - RPC URL: https://rpc-mumbai.polygon.technology
+  - Chain ID: 80001
+  - Gas Price Strategy: EIP-1559
+- Infrastructure
+  - Memory: 4GB RAM
+  - Storage: 100GB SSD
+  - CPU: 2 cores
+  - Network Bandwidth: 100Mbps
+- Monitoring
+  - Block Explorer: Mumbai Polygonscan
+  - Metrics Dashboard: Grafana
+  - Alert System: Prometheus
 
-### 6.3 Production
-- Ethereum Mainnet
-- Memory: 8GB
-- Storage: 500GB
-- Network: Mainnet
+### 6.3 Production (Ethereum Mainnet)
+- Network Configuration
+  - Multiple RPC Providers
+  - Chain ID: 1
+  - Gas Price Strategy: EIP-1559 + Priority Fee
+- Infrastructure
+  - Memory: 8GB RAM
+  - Storage: 500GB NVMe SSD
+  - CPU: 4 cores
+  - Network Bandwidth: 1Gbps
+- Security
+  - Multi-sig Deployment
+  - Hardware Security Module
+  - 24/7 Monitoring
+  - Automated Circuit Breakers
 
 ## 7. Maintenance Procedures
 
