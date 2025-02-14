@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  # FireFly Integration
+  firefly-integration:
+    extends:
+      file: ../firefly-config/docker-compose.yml
+      service: firefly
+    networks:
+      - integration-network
+
+  # Cacti Integration
+  cacti-integration:
+    extends:
+      file: ../cacti-config/docker-compose.yml
+      service: cacti-api
+    networks:
+      - integration-network
+    environment:
+      - FIREFLY_API_URL=http://firefly-integration:5000
+      - BESU_RPC_URL=http://besu:8545
+
+  # Identus Integration
+  identus-integration:
+    extends:
+      file: ../identus-config/docker-compose.yml
+      service: identus-core
+    networks:
+      - integration-network
+    environment:
+      - FIREFLY_API_URL=http://firefly-integration:5000
+      - CACTI_API_URL=http://cacti-integration:3000
+
+networks:
+  integration-network:
+    driver: bridge
