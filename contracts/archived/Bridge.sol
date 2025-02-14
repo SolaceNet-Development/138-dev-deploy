@@ -7,7 +7,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { IBridge } from "../interfaces/IBridge.sol";
 import { IOracle } from "../interfaces/IOracle.sol";
 
-abstract contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
+contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant VALIDATOR_ROLE = keccak256("VALIDATOR_ROLE");
 
@@ -86,6 +86,7 @@ abstract contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
             }
             validators[i] = validator;
         }
+        emit Transfer(from, to, amount);
     }
     
     function setFee(uint256 _fee) external onlyRole(DEFAULT_ADMIN_ROLE) {
