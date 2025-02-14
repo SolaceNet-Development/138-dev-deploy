@@ -58,11 +58,15 @@ contract Bridge is IBridge, AccessControl {
     mapping(bytes32 => uint256) public validationTimestamps;
 
     constructor(address _oracle, uint256 _required) {
+        if (_oracle == address(0)) revert InvalidOracleAddress();
+        if (_required == 0) revert InvalidValidatorCount();
+        
         oracle = IOracle(_oracle);
         required = _required;
         transferLimit = 1000 ether; // Default limit
         fee = 0.001 ether; // Default fee of 0.001 ETH
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(VALIDATOR_ROLE, msg.sender);
     }
 
     modifier whenNotPaused() {
