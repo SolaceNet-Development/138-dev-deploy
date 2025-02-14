@@ -210,14 +210,14 @@ describe("Bridge Contract", function () {
 
     describe("Role-based access control", function() {
         it("Should grant and revoke roles correctly", async function() {
-            const OPERATOR_ROLE = await bridge.OPERATOR_ROLE();
-            expect(await bridge.hasRole(OPERATOR_ROLE, owner.address)).to.be.true;
+            const VALIDATOR_ROLE = await bridge.VALIDATOR_ROLE();
+            expect(await bridge.hasRole(VALIDATOR_ROLE, owner.address)).to.be.true;
             
-            await bridge.grantRole(OPERATOR_ROLE, addr1.address);
-            expect(await bridge.hasRole(OPERATOR_ROLE, addr1.address)).to.be.true;
+            await bridge.grantRole(VALIDATOR_ROLE, addr1.address);
+            expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.true;
             
-            await bridge.revokeRole(OPERATOR_ROLE, addr1.address);
-            expect(await bridge.hasRole(OPERATOR_ROLE, addr1.address)).to.be.false;
+            await bridge.revokeRole(VALIDATOR_ROLE, addr1.address);
+            expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.false;
         });
 
         it("Should cache and expire validations", async function() {
