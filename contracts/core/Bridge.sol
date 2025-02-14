@@ -216,7 +216,7 @@ contract Bridge is IBridge, AccessControl {
         validationTimestamps[messageHash] = block.timestamp;
     }
 
-    function isValidationCached(bytes32 messageHash, address validator) internal view returns (bool) {
+    function isValidationCached(bytes32 messageHash, address validator) public view returns (bool) {
         if (block.timestamp > validationTimestamps[messageHash] + MAX_CACHE_AGE) {
             return false;
         }
