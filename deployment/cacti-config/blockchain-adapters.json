@@ -1,0 +1,43 @@
+{
+  "adapters": {
+    "ethereum": {
+      "enabled": true,
+      "rpcEndpoint": "http://besu:8545",
+      "chainId": 2025,
+      "contracts": {
+        "bridge": {
+          "address": "",
+          "abi": "./contracts/bridge.json"
+        }
+      }
+    },
+    "polygon": {
+      "enabled": true,
+      "rpcEndpoint": "https://polygon-rpc.com",
+      "chainId": 137
+    },
+    "cosmos": {
+      "enabled": true,
+      "rpcEndpoint": "https://cosmos-rpc.com",
+      "chainId": "cosmoshub-4"
+    },
+    "solana": {
+      "enabled": true,
+      "rpcEndpoint": "https://api.mainnet-beta.solana.com"
+    },
+    "polkadot": {
+      "enabled": true,
+      "rpcEndpoint": "wss://rpc.polkadot.io"
+    }
+  },
+  "bridges": {
+    "erc721": {
+      "enabled": true,
+      "contractAddress": ""
+    },
+    "erc1155": {
+      "enabled": true,
+      "contractAddress": ""
+    }
+  }
+}
