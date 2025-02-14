@@ -1,0 +1,32 @@
+{
+  "plugins": {
+    "blockchain": {
+      "ethereum": {
+        "enabled": true,
+        "rpcEndpoint": "http://localhost:8545"
+      },
+      "fabric": {
+        "enabled": true,
+        "networkProfile": "./connection-profile.json"
+      }
+    },
+    "identity": {
+      "did": {
+        "enabled": true,
+        "method": "web"
+      }
+    }
+  },
+  "relay": {
+    "enabled": true,
+    "port": 5100,
+    "host": "0.0.0.0"
+  },
+  "security": {
+    "tls": {
+      "enabled": true,
+      "cert": "./certs/server-cert.pem",
+      "key": "./certs/server-key.pem"
+    }
+  }
+}
