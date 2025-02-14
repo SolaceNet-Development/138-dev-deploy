@@ -1,0 +1,28 @@
+{
+  "did": {
+    "method": "web",
+    "registry": {
+      "url": "http://identus-did-registry:7001"
+    }
+  },
+  "verifiableCredentials": {
+    "issuer": {
+      "url": "http://identus-vc-issuer:7002",
+      "zkpEnabled": true
+    }
+  },
+  "kyc": {
+    "provider": "standard",
+    "compliance": {
+      "fatfTravelRule": true,
+      "gdpr": true,
+      "basel3": true
+    }
+  },
+  "security": {
+    "zkpAuth": {
+      "enabled": true,
+      "proofTypes": ["rangeProof", "setMembership", "zeroKnowledge"]
+    }
+  }
+}

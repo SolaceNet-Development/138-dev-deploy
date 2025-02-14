@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  identus-core:
+    image: hyperledger/identus-core:latest
+    ports:
+      - "7000:7000"
+    environment:
+      - IDENTUS_PORT=7000
+      - IDENTUS_LOG_LEVEL=info
+      - IDENTUS_DID_METHOD=web
+      - IDENTUS_ZKP_ENABLED=true
+    volumes:
+      - ./identus-config.json:/etc/identus/config.json
+
+  identus-did-registry:
+    image: hyperledger/identus-did-registry:latest
+    ports:
+      - "7001:7001"
+    environment:
+      - REGISTRY_PORT=7001
+      - REGISTRY_STORAGE=postgres
+      - REGISTRY_DB_URL=postgres://identus:identus@postgres:5432/identus_registry
+
+  identus-vc-issuer:
+    image: hyperledger/identus-vc-issuer:latest
+    ports:
+      - "7002:7002"
+    environment:
+      - ISSUER_PORT=7002
+      - ISSUER_ZKP_ENABLED=true
+      - ISSUER_KYC_PROVIDER=standard
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=identus
+      - POSTGRES_PASSWORD=identus
+      - POSTGRES_DB=identus_registry
+    volumes:
+      - identus_data:/var/lib/postgresql/data
+
+volumes:
+  identus_data:
