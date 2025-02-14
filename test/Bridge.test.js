@@ -12,7 +12,6 @@ describe("Bridge Contract", function () {
         const Bridge = await ethers.getContractFactory("contracts/core/Bridge.sol:Bridge");
         const bridge = await Bridge.deploy(oracle.address, 3);
         return { bridge, oracle, owner, addr1, addr2 };
-        return { bridge, oracle, owner, addr1, addr2 };
     }
 
     beforeEach(async function () {
