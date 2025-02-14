@@ -55,7 +55,7 @@ contract Bridge is IBridge, Pausable, AccessControl, ReentrancyGuard {
     error AmountBelowFee(uint256 amount, uint256 minRequired);
     error TransferAlreadyProcessed(bytes32 transferId);
 
-    function transfer(bytes32 to, uint256 amount) external override nonReentrant whenNotPaused {
+    function transfer(bytes32 to, uint256 amount) external payable override nonReentrant whenNotPaused {
         if (amount > transferLimit) revert AmountExceedsLimit(amount, transferLimit);
         if (amount <= fee) revert AmountBelowFee(amount, fee);
         
