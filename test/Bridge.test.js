@@ -25,13 +25,15 @@ describe("Bridge Contract", function () {
 
     it("Should add a validator", async function () {
         await bridge.addValidator(addr1.address);
-        expect(await bridge.validators(addr1.address)).to.be.true;
+        const VALIDATOR_ROLE = await bridge.VALIDATOR_ROLE();
+        expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.true;
     });
 
     it("Should remove a validator", async function () {
         await bridge.addValidator(addr1.address);
         await bridge.removeValidator(addr1.address);
-        expect(await bridge.validators(addr1.address)).to.be.false;
+        const VALIDATOR_ROLE = await bridge.VALIDATOR_ROLE();
+        expect(await bridge.hasRole(VALIDATOR_ROLE, addr1.address)).to.be.false;
     });
 
     describe("Transfer validation", function() {
