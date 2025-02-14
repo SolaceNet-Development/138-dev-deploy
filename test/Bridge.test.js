@@ -73,7 +73,8 @@ describe("Bridge Contract", function () {
             const to = ethers.zeroPadValue(addr1.address, 32);
             const overLimit = ethers.parseEther("1001");
             
-            await expect(bridge.transfer(to, overLimit))
+            const fee = await bridge.fee();
+            await expect(bridge.transfer(to, overLimit, { value: fee }))
                 .to.be.revertedWithCustomError(bridge, "TransferLimitExceeded");
         });
 
@@ -81,12 +82,13 @@ describe("Bridge Contract", function () {
             const to = ethers.zeroPadValue(addr1.address, 32);
             const amount = ethers.parseEther("1.0");
 
+            const fee = await bridge.fee();
             await bridge.pause();
-            await expect(bridge.transfer(to, amount))
+            await expect(bridge.transfer(to, amount, { value: fee }))
                 .to.be.revertedWithCustomError(bridge, "TransferPaused");
 
             await bridge.unpause();
-            await expect(bridge.transfer(to, amount))
+            await expect(bridge.transfer(to, amount, { value: fee }))
                 .to.emit(bridge, "Transfer");
         });
 
@@ -126,6 +128,7 @@ describe("Bridge Contract", function () {
             const MockToken = await ethers.getContractFactory("contracts/mocks/MockERC20.sol:MockERC20");
             mockToken = await MockToken.deploy("Mock", "MCK");
             await mockToken.waitForDeployment();
+            mockToken = await mockToken.getAddress();
         });
 
         it("Should manage supported tokens", async function() {
