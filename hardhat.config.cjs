@@ -21,6 +21,19 @@ module.exports = {
     cache: "./cache",
     artifacts: "./artifacts"
   },
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      }
+    ]
+  },
   networks: {
     hardhat: {
       chainId: 1337
