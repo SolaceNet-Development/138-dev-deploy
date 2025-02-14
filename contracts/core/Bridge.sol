@@ -211,7 +211,7 @@ contract Bridge is IBridge, AccessControl {
         emit TokenRemoved(token);
     }
 
-    function cacheValidation(bytes32 messageHash, address validator) internal {
+    function cacheValidation(bytes32 messageHash, address validator) public onlyRole(DEFAULT_ADMIN_ROLE) {
         validationCache[messageHash][validator] = true;
         validationTimestamps[messageHash] = block.timestamp;
     }
