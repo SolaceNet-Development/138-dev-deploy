@@ -204,7 +204,7 @@ describe("Bridge Contract", function () {
             const fee = await bridge.fee();
             
             await bridge.transfer(to, ethers.parseEther("1.0"), { value: fee });
-            const ownerBytes32 = ethers.zeroPadValue(ethers.hexlify(BigInt(owner.address)), 32);
+            const ownerBytes32 = ethers.zeroPadValue(owner.address, 32);
             expect(await bridge.nonces(ownerBytes32)).to.equal(1);
             
             await bridge.transfer(to, ethers.parseEther("2.0"), { value: fee });
