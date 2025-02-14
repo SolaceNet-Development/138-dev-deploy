@@ -6,15 +6,7 @@ require("hardhat-contract-sizer");
 require("@typechain/hardhat");
 
 module.exports = {
-  solidity: {
-    version: "0.8.20",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200
-      }
-    }
-  },
+
   paths: {
     sources: "./contracts",
     tests: "./test",
