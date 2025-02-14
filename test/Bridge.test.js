@@ -70,16 +70,16 @@ describe("Bridge Contract", function () {
 
     describe("Transfer limits and pausing", function() {
         it("Should enforce transfer limits", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
-            const overLimit = ethers.utils.parseEther("1001");
+            const to = ethers.zeroPadValue(addr1.address, 32);
+            const overLimit = ethers.parseEther("1001");
             
             await expect(bridge.transfer(to, overLimit))
                 .to.be.revertedWithCustomError(bridge, "TransferLimitExceeded");
         });
 
         it("Should pause and unpause transfers", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
-            const amount = ethers.utils.parseEther("1.0");
+            const to = ethers.zeroPadValue(addr1.address, 32);
+            const amount = ethers.parseEther("1.0");
 
             await bridge.pause();
             await expect(bridge.transfer(to, amount))
@@ -91,7 +91,26 @@ describe("Bridge Contract", function () {
         });
 
         it("Should prevent duplicate transfer processing", async function() {
-            // Test setup code...
+            const [from, to, amount] = [
+                ethers.zeroPadValue(addr1.address, 32),
+                ethers.zeroPadValue(addr2.address, 32),
+                ethers.parseEther("1.0")
+            ];
+            
+            const message = ethers.solidityPackedKeccak256(
+                ["bytes32", "bytes32", "uint256"],
+                [from, to, amount]
+            );
+
+            await bridge.addValidator(addr1.address);
+            await bridge.addValidator(addr2.address);
+
+            const signatures = [
+                await owner.signMessage(ethers.getBytes(message)),
+                await addr1.signMessage(ethers.getBytes(message)),
+                await addr2.signMessage(ethers.getBytes(message))
+            ];
+            
             await expect(bridge.validateTransfer(from, to, amount, signatures))
                 .to.emit(bridge, "Transfer");
             
@@ -104,9 +123,9 @@ describe("Bridge Contract", function () {
         let mockToken;
         
         beforeEach(async function() {
-            const MockToken = await ethers.getContractFactory("MockERC20");
+            const MockToken = await ethers.getContractFactory("contracts/mocks/MockERC20.sol:MockERC20");
             mockToken = await MockToken.deploy("Mock", "MCK");
-            await mockToken.deployed();
+            await mockToken.waitForDeployment();
         });
 
         it("Should manage supported tokens", async function() {
@@ -153,38 +172,38 @@ describe("Bridge Contract", function () {
 
     describe("Fee management", function() {
         it("Should collect fees on transfer", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
-            const amount = ethers.utils.parseEther("1.0");
+            const to = ethers.zeroPadValue(addr1.address, 32);
+            const amount = ethers.parseEther("1.0");
             const fee = await bridge.fee();
             
             await expect(bridge.transfer(to, amount, { value: fee }))
                 .to.emit(bridge, "Transfer");
                 
-            expect(await bridge.collectedFees(ethers.constants.AddressZero))
+            expect(await bridge.collectedFees(ethers.ZeroAddress))
                 .to.equal(fee);
         });
 
         it("Should withdraw collected fees", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
+            const to = ethers.zeroPadValue(addr1.address, 32);
             const fee = await bridge.fee();
             
-            await bridge.transfer(to, ethers.utils.parseEther("1.0"), { value: fee });
+            await bridge.transfer(to, ethers.parseEther("1.0"), { value: fee });
             
             const beforeBalance = await ethers.provider.getBalance(addr2.address);
-            await bridge.withdrawFees(ethers.constants.AddressZero, addr2.address);
+            await bridge.withdrawFees(ethers.ZeroAddress, addr2.address);
             
             const afterBalance = await ethers.provider.getBalance(addr2.address);
-            expect(afterBalance.sub(beforeBalance)).to.equal(fee);
+            expect(afterBalance - beforeBalance).to.equal(fee);
         });
 
         it("Should track nonces correctly", async function() {
-            const to = ethers.utils.hexZeroPad(addr1.address, 32);
+            const to = ethers.zeroPadValue(addr1.address, 32);
             const fee = await bridge.fee();
             
-            await bridge.transfer(to, ethers.utils.parseEther("1.0"), { value: fee });
+            await bridge.transfer(to, ethers.parseEther("1.0"), { value: fee });
             expect(await bridge.nonces(owner.address)).to.equal(1);
             
-            await bridge.transfer(to, ethers.utils.parseEther("2.0"), { value: fee });
+            await bridge.transfer(to, ethers.parseEther("2.0"), { value: fee });
             expect(await bridge.nonces(owner.address)).to.equal(2);
         });
     });
