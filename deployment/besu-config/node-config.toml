@@ -1,0 +1,35 @@
+data-path="data"
+node-private-key-file="key"
+
+# Network
+p2p-host="0.0.0.0"
+p2p-port=30303
+max-peers=25
+
+# RPC
+rpc-http-enabled=true
+rpc-http-host="0.0.0.0"
+rpc-http-port=8545
+rpc-http-cors-origins=["*"]
+rpc-ws-enabled=true
+rpc-ws-host="0.0.0.0"
+rpc-ws-port=8546
+
+# Mining
+miner-enabled=true
+miner-coinbase="0x0000000000000000000000000000000000000000"
+
+# Privacy
+privacy-enabled=true
+privacy-url="http://127.0.0.1:9102"
+privacy-public-key-file="tessera.pub"
+
+# Metrics
+metrics-enabled=true
+metrics-host="0.0.0.0"
+metrics-port=9545
+
+# Plugins
+plugin-privacy-enabled=true
+plugin-privacy-service-url="http://127.0.0.1:9102"
+plugin-privacy-public-key-file="tessera.pub"
